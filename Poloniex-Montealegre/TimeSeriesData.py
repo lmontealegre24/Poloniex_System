@@ -36,7 +36,7 @@ def Dates(start,end):
         print("Error: Pick a date that begins before end date")
         return False
     if (end-start).days > 31:
-        print("Error: Must choose period less than a 31 days")
+        print("Error: Must choose interval less than a 31 days (edit for longer)")
         return False
     return True
 
