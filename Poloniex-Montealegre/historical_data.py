@@ -6,11 +6,11 @@ import csv
 import pandas as pd
 import datetime as dt
 
-def toUnix(strdate):
+def currUnix(strdate):
     date= dt.datetime.strptime(strdate, "%m/%d/%Y")
     return int(time.mktime(date.timetuple()))
 
-def toDate(unixdate):
+def currDate(unixdate):
     date= dt.datetime.fromtimestamp(int(unixdate))
     return date.strftime("%m/%d/%Y %H:%M:%S")
 
@@ -63,7 +63,7 @@ def dates(start,end):
 def grabURL(pair, interval, start, end):
     base= 'https://poloniex.com/public?command=returnChartData&currencyPair='
     return '%s%s_%s&start=%s&end=%s&period=%s' % \
-	(base, pair[0], pair[1], toUnix(start), toUnix(end), interval)
+	(base, pair[0], pair[1], currUnix(start), currUnix(end), interval)
 
 class TimeSeries(object):
     
@@ -103,7 +103,7 @@ class TimeSeries(object):
             row= []
             for item in headers:
                 if item== 'date':
-                    row.append(toDate(points[item]))
+                    row.append(currDate(points[item]))
                 else:
                     row.append(points[item])
             data.append(row)
