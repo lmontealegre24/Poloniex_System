@@ -5,7 +5,7 @@ Created on Fri Mar  9 11:06:08 2018
 @author: lmontealegre
 """
 #%%
-from TimeSeriesData import TimeSeries
+from historical_data import TimeSeries
 
 analysis = TimeSeries()
 
