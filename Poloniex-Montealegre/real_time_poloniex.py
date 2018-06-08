@@ -73,19 +73,10 @@ class Information(object):
         return ob
         
 
-        
-
-        
-
     
-   
-#%%
-coin=input("Ticker of orderbook you are looking for?: ")
-test=Orderbook().load()
-print(test[('BTC',coin)])
+
 #%%
 
 test= Orderbook().grabPair('BTC','LTC')
 print(test)
 
-#%%
