@@ -268,4 +268,120 @@ def c_sjt(n, p):
 
     return jc
 
+
+def coint(endog, det_order=0, k_ar_diff=1, print_test = False, verbose=False):
+
+    """
+
+    Perform the Johansen cointegration test for determining the cointegration
+
+    rank of a VECM.
+
+    Parameters
+
+    ----------
+
+    endog : array-like (nobs_tot x neqs)
+
+        The data with presample.
+
+    det_order : int
+
+        * -1 - no deterministic terms
+
+        * 0 - constant term
+
+        * 1 - linear trend
+
+    k_ar_diff : int, nonnegative
+
+        Number of lagged differences in the model.
+
+    Returns
+
+    -------
+
+    result : Holder
+
+        An object containing the results which can be accessed using
+
+        dot-notation. The object's attributes are
+
+        * eig: (neqs)
+
+          Eigenvalues.
+
+        * evec: (neqs x neqs)
+
+          Eigenvectors.
+
+        * lr1: (neqs)
+
+          Trace statistic.
+
+        * lr2: (neqs)
+
+          Maximum eigenvalue statistic.
+
+        * cvt: (neqs x 3)
+
+          Critical values (90%, 95%, 99%) for trace statistic.
+
+        * cvm: (neqs x 3)
+
+          Critical values (90%, 95%, 99%) for maximum eigenvalue
+
+          statistic.
+
+        * method: str
+
+          "johansen"
+
+        * r0t: (nobs x neqs)
+
+          Residuals for :math:`\\Delta Y`. See p. 292 in [1]_.
+
+        * rkt: (nobs x neqs)
+
+          Residuals for :math:`Y_{-1}`. See p. 292 in [1]_.
+
+        * ind: (neqs)
+
+          Order of eigenvalues.
+
+    ----------
+
+    .. [1] Lütkepohl, H. 2005. *New Introduction to Multiple Time Series Analysis*. Springer.
+
+    """
+
+ 
+
+    if verbose:
+
+        if det_order not in [-1, 0, 1]:
+
+            print("Critical values are only available for a det_order of -1, 0, or 1.")
+
+        if endog.shape[1] > 12:  # todo: test with a time series of 13 variables
+
+            print("Critical values are only available for time series with 12 variables at most.")
+
+ 
+
+    if type(endog) is np.ndarray:
+
+        colnames = None
+
+    else:
+
+        colnames = endog.columns.values
+
+        endog = endog.as_matrix()
+
+    
+
+    from statsmodels.regression.linear_model import OLS
+
+    tdiff = np.diff
  

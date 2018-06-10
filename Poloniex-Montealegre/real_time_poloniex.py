@@ -73,10 +73,42 @@ class Information(object):
         return ob
         
 
+class Volume():
+        
+    def load(self):
+        data= requests.get('https://poloniex.com/public?command=return24hVolume').json()
+        dic={}
+        for pair in data:
+            ids= pair.split('_')
+            info= data[pair]
+            if len(ids)== 1:
+                dic[str(ids)]=info
+            else:
+                dic[(ids[0], ids[1])]= info
+        return dic
     
+    def pair(self, market, coin):
+        pair=(market,coin)
+        instance= self.load()
+        try: 
+            volume= instance[pair]
+        except:
+            print("Error: %s is not on the %s market" % (coin, market))
+            return
+        return volume
 
 #%%
-
+#test orderbook
 test= Orderbook().grabPair('BTC','LTC')
 print(test)
+
+#test 24hour volume
+pick_coins=['LTC','ETH','BCH']
+pick_market='BTC'
+
+volume24=Volume()
+
+for coin in pick_coins:
+    vol= volume24.pair(pick_market,coin)
+    print(vol)
 
