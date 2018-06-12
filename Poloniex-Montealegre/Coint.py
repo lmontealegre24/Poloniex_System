@@ -6,11 +6,31 @@ Created on Thu Jun  7 12:11:41 2018
 """
 #%%
 
+import datetime as dt
+
 import pandas as pd
 
 import numpy as np
 
+import matplotlib.pyplot as plt
 
+from itertools import islice
+
+from decimal import Decimal
+
+from scipy import linalg
+
+from scipy.optimize import minimize
+
+import scipy.stats as st
+
+import calendar
+
+import collections
+
+from enum import Enum
+
+ 
 
 pd.set_option('display.max_rows', 200)
 
@@ -268,6 +288,7 @@ def c_sjt(n, p):
 
     return jc
 
+ 
 
 def coint(endog, det_order=0, k_ar_diff=1, print_test = False, verbose=False):
 
@@ -384,4 +405,167 @@ def coint(endog, det_order=0, k_ar_diff=1, print_test = False, verbose=False):
     from statsmodels.regression.linear_model import OLS
 
     tdiff = np.diff
+
  
+
+    class Holder(object):
+
+        pass
+
+ 
+
+    def trimr(x, front, end):
+
+        if end > 0:
+
+            return x[front:-end]
+
+        else:
+
+            return x[front:]
+
+ 
+
+    import statsmodels.tsa.tsatools as tsat
+
+    mlag = tsat.lagmat
+
+ 
+
+    def lag(x, lags):
+
+        return x[:-lags]
+
+ 
+
+    def detrend(y, order):
+
+        if order == -1:
+
+            return y
+
+        return OLS(y, np.vander(np.linspace(-1, 1, len(y)),
+
+                                order+1)).fit().resid
+
+ 
+
+    def resid(y, x):
+
+        if x.size == 0:
+
+            return y
+
+        r = y - np.dot(x, np.dot(np.linalg.pinv(x), y))
+
+        return r
+
+ 
+
+    nobs, neqs = endog.shape
+
+ 
+
+    if det_order > -1:
+
+        f = 0
+
+    else:
+
+        f = det_order
+
+ 
+
+    endog = detrend(endog, det_order)
+
+    dx = tdiff(endog, 1, axis=0)
+
+    z = mlag(dx, k_ar_diff)
+
+    z = trimr(z, k_ar_diff, 0)
+
+    z = detrend(z, f)
+
+ 
+
+    dx = trimr(dx, k_ar_diff, 0)
+
+ 
+
+    dx = detrend(dx, f)
+
+    r0t = resid(dx, z)
+
+    lx = lag(endog, k_ar_diff)
+
+    lx = trimr(lx, 1, 0)
+
+    dx = detrend(lx, f)
+
+    rkt = resid(dx, z)  # level on lagged diffs
+
+    skk = np.dot(rkt.T, rkt) / rkt.shape[0]
+
+    sk0 = np.dot(rkt.T, r0t) / rkt.shape[0]
+
+    s00 = np.dot(r0t.T, r0t) / r0t.shape[0]
+
+    sig = np.dot(sk0, np.dot(np.linalg.inv(s00), sk0.T))
+
+    tmp = np.linalg.inv(skk)
+
+    au, du = np.linalg.eig(np.dot(tmp, sig))  # au is eval, du is evec
+
+ 
+
+    temp = np.linalg.inv(np.linalg.cholesky(np.dot(du.T, np.dot(skk, du))))
+
+    dt = np.dot(du, temp)
+
+ 
+
+    # JP: the next part can be done much easier
+
+    auind = np.argsort(au)
+
+    aind = np.flipud(auind)
+
+    a = au[aind]
+
+    d = dt[:, aind]
+
+ 
+
+    #  Compute the trace and max eigenvalue statistics
+
+    lr1 = np.zeros(neqs)
+
+    lr2 = np.zeros(neqs)
+
+    cvm = np.zeros((neqs, 3))
+
+    cvt = np.zeros((neqs, 3))
+
+    iota = np.ones(neqs)
+
+    t, _ = rkt.shape
+
+    for i in range(0, neqs):
+
+        tmp = trimr(np.log(iota-a), i, 0)
+
+        lr1[i] = -t * np.sum(tmp, 0)
+
+        lr2[i] = -t * np.log(1-a[i])
+
+        cvm[i, :] = c_sja(neqs - i, det_order)
+
+        cvt[i, :] = c_sjt(neqs - i, det_order)
+
+        aind[i] = i
+
+ 
+
+    test_stat = lr1
+
+    crit_val  = cvt
